@@ -6,14 +6,43 @@ import 'package:meals_app/widgets/category_grid_item.dart';
 
 import '../models/meal.dart';
 
-class CategoriesScreen extends StatelessWidget {
-  const CategoriesScreen({Key? key, required this.onToggleFavorite, required this.availableMeals}) : super(key: key);
+class CategoriesScreen extends StatefulWidget {
+  const CategoriesScreen({Key? key, required this.availableMeals})
+      : super(key: key);
 
-  final void Function(Meal meal) onToggleFavorite;
   final List<Meal> availableMeals;
 
+  @override
+  State<CategoriesScreen> createState() => _CategoriesScreenState();
+}
+
+class _CategoriesScreenState extends State<CategoriesScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+      lowerBound: 0,
+      upperBound: 1,
+    );
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+
+    _animationController.dispose();
+  }
+
   void _selectCategory(BuildContext context, Category category) {
-    final filteredMeals = availableMeals
+    final filteredMeals = widget.availableMeals
         .where(
           (meals) => meals.categories.contains(category.id),
         )
@@ -24,7 +53,6 @@ class CategoriesScreen extends StatelessWidget {
         builder: (ctx) => MealsScreen(
           title: category.title,
           meals: filteredMeals,
-          onToggleFavorite: onToggleFavorite,
         ),
       ),
     );
@@ -32,7 +60,9 @@ class CategoriesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView(
+    return AnimatedBuilder(
+      animation: _animationController,
+      child: GridView(
         padding: const EdgeInsets.all(24),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
@@ -49,6 +79,19 @@ class CategoriesScreen extends StatelessWidget {
               },
             )
         ],
-      );
+      ),
+      builder: (context, child) => SlideTransition(
+        position: Tween(
+          begin: const Offset(0, 0.3),
+          end: const Offset(0, 0),
+        ).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeInOut,
+          ),
+        ),
+        child: child,
+      ),
+    );
   }
 }
